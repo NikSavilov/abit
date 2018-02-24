@@ -6,15 +6,6 @@ from oauth2client import client
 from oauth2client import tools
 from oauth2client.file import Storage
 
-def post_image():
-	url = "https://rosreestr.ru/wps/portal/p/cc_ib_portal_services/cc_vizualisation/"
-	path = "1.xml"
-	driver = webdriver.Chrome('chromedriver.exe')
-	driver.get(url)
-	upload_box = driver.find_element_by_id('xml_file') 
-	upload_box.sendKeys(path)
-	driver.findElement(By.CLASS_NAME("terminal-button-bright")).click()
-
 def get_credentials():
     """Gets valid user credentials from storage.
 
@@ -75,12 +66,21 @@ def unzip(files_list):
 			_ , ext = os.path.splitext(f)
 			if ext == '.xml':
 				zip_pack.extract(path = 'loaded/unzip', member = f)
-				unzip_list.append(f)
+				unzip_list.append('loaded/unzip/' + f)
 		zip_pack.close()		
 	return unzip_list
 		
-def 
-
+def load_image(unzip_list):
+	url = "https://rosreestr.ru/wps/portal/p/cc_ib_portal_services/cc_vizualisation/"
+	driver = webdriver.Chrome('chromedriver.exe')
+	for path in unzip_list:
+		driver.get(url)
+		upload_box = driver.find_element(By.ID,'xml_file') 
+		upload_box.sendKeys(path)
+		driver.find_element(By.CLASS_NAME("terminal-button-bright")).click()
+		link_load = driver.find_element(By.XPATH, '/html/body/div/section/div[1]/table/tbody/tr/td/div[2]/div/div/div/div/table/tbody/tr[3]/td/form/table/tbody/tr[3]/td[2]/table/tbody/tr/td/table/tbody/tr/td[2]/a')
+		link_load.click()
+		
 files = mail_parser()
 unzip = unzip(files)
 print(unzip)
