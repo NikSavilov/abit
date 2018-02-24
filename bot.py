@@ -1,4 +1,5 @@
-import requests, time, os, httplib2, random, base64, zipfile
+import requests, time, os, httplib2, random, base64, zipfile, pdfkit
+from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from apiclient import discovery
@@ -34,7 +35,7 @@ def get_credentials():
         print('Storing credentials to ' + credential_path)
     return credentials
 
-def mail_parser(mail='elen-savilova@yandex.ru', amount = 3):
+def mail_parser(mail='elen-savilova@yandex.ru', amount = 1):
 	credentials = get_credentials()
 	http = credentials.authorize(httplib2.Http())
 	service = discovery.build('gmail', 'v1', http=http)
@@ -72,15 +73,30 @@ def unzip(files_list):
 		
 def load_image(unzip_list):
 	url = "https://rosreestr.ru/wps/portal/p/cc_ib_portal_services/cc_vizualisation/"
+	chromeOptions = webdriver.ChromeOptions() 
+	prefs = { 
+	"browser.helperApps.alwaysAsk.force" :False, 
+	"browser.helperApps.neverAsk.saveToDisk" : "application/pdf;text/plain;text/csv"} 
+	chromeOptions.add_experimental_option("prefs",prefs)
 	driver = webdriver.Chrome('chromedriver.exe')
 	for path in unzip_list:
-		driver.get(url)
-		upload_box = driver.find_element(By.ID,'xml_file') 
-		upload_box.sendKeys(path)
-		driver.find_element(By.CLASS_NAME("terminal-button-bright")).click()
+		driver.get(url) 
+		time.sleep(1)
+		upload_box = driver.find_element(By.ID,"xml_file");
+		upload_box.send_keys('C:/code/abit/' + path)
+		driver.find_element(By.CLASS_NAME,"terminal-button-bright").click()
 		link_load = driver.find_element(By.XPATH, '/html/body/div/section/div[1]/table/tbody/tr/td/div[2]/div/div/div/div/table/tbody/tr[3]/td/form/table/tbody/tr[3]/td[2]/table/tbody/tr/td/table/tbody/tr/td[2]/a')
 		link_load.click()
+		driver.switch_to.window(driver.window_handles[-1]);
+		page = driver.page_source
+		soup = BeautifulSoup(page,'html5lib')
+		
+
+		name , _ = os.path.splitext(path)
+		pdfkit.from_string(page,name + '.pdf')
+
+
 		
 files = mail_parser()
-unzip = unzip(files)
-print(unzip)
+unzip_list = unzip(files)
+load_image(unzip_list)
